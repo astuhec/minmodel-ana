@@ -31,7 +31,7 @@ sys.path.insert(0, DIR + 'main-programs/')
 import minmodel_module as module
 import minmodel_helpers as helpers
 
-input_file = DIR + 'examples/mass-ratios/input.json5'
+input_file = DIR + 'examples/seebeck-boltzmann/input.json5'
 ####################################################################################################################
 
 ## Fix t0 = 1.0, which means then m_a = 0.5. Fix t1 = 3.0, which means m_b = 1/6, and m_b/m_b = 3.
