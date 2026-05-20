@@ -22,7 +22,6 @@ class model:
         self.K = np.arange(-self.Nk//2,self.Nk//2) * 2*np.pi/self.L
 
         print(f'=' * 80 + '\n' + 'Started 2-band calculation' + '\n' + f'=' * 80, flush=True)
-        print(f'Initialized 1d lattice with Nk={self.Nk} momenta points.', flush=True)
         
         self.m_a = 1/(2*config.get("t1")) if m_a==None else m_a
         self.m_b = 1/(2*config.get("t2")) if m_b==None else m_b
@@ -30,6 +29,9 @@ class model:
         self.Delta = config.get("Delta") if Delta==None else Delta
         self.V0 = config.get("V0") if V0==None else V0
 
+        print(f'Initialized 1d electron gas with Nk={self.Nk} momenta points,' + '\n' + \
+              f'm_0/m_1={self.m_a/self.m_b}, gap={self.gap}, Delta={Delta}', flush=True)
+        
         self.tol = config.get("tol")
         self.maxiter = config.get("maxiter")
         
@@ -37,7 +39,7 @@ class model:
         self.energije = helpers.Energies(self.m_a, self.m_b, self.gap, self.Delta, self.K, self.tol)
         self.energije_bare = helpers.Energies_bare(self.m_a, self.m_b, self.gap, self.K)
         self.mu = 0.5 * (np.min(self.energije[1]) + np.max(self.energije[0]))
-    
+
         # physical data
         self.Ts = []
         self.mus = []
