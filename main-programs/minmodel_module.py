@@ -10,7 +10,8 @@ def load_config(path):
         return json5.load(f)
     
 class model:
-    def __init__(self, input_file):
+    def __init__(self, input_file,
+                 m_a=None, m_b=None, gap=None, Delta=None, V0=None,):
         config = load_config(input_file)
         self.config = config
     
@@ -23,12 +24,11 @@ class model:
         print(f'=' * 80 + '\n' + 'Started 2-band calculation' + '\n' + f'=' * 80, flush=True)
         print(f'Initialized 1d lattice with Nk={self.Nk} momenta points.', flush=True)
         
-        self.m_a = 1/(2*config.get("t1"))
-        self.m_b = 1/(2*config.get("t2"))
-        self.gap = config.get("gap")
-        self.Delta = config.get("Delta")
-        self.V0 = config.get("V0")
-
+        self.m_a = 1/(2*config.get("t1")) if m_a==None else m_a
+        self.m_b = 1/(2*config.get("t2")) if m_b==None else m_b
+        self.gap = config.get("gap") if gap==None else gap
+        self.Delta = config.get("Delta") if Delta==None else Delta
+        self.V0 = config.get("V0") if V0==None else V0
 
         self.tol = config.get("tol")
         self.maxiter = config.get("maxiter")
