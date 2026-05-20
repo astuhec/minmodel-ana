@@ -20,7 +20,7 @@ class model:
         self.L = int(2*np.pi / dk)
         self.K = np.arange(-self.Nk//2,self.Nk//2) * 2*np.pi/self.L
 
-        print(f'=' * 80 + '\n' + 'Starded 2-band calculation' + '\n' + f'=' * 80, flush=True)
+        print(f'=' * 80 + '\n' + 'Started 2-band calculation' + '\n' + f'=' * 80, flush=True)
         print(f'Initialized 1d lattice with Nk={self.Nk} momenta points.', flush=True)
         
         self.m_a = 1/(2*config.get("t1"))
