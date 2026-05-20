@@ -112,10 +112,10 @@ class model:
             k0_boltz, k1_boltz = tokovi.Kn_Boltzmann(self.K, v_dressed, self.energije, self.mu, T, Gamma)
             k0_boltzs[g] = k0_boltz
             k1_boltzs[g] = k1_boltz
-        self.K0_kubo.append(k0_kubos)
-        self.K1_kubo.append(k1_kubos)
-        self.K0_boltz.append(k0_boltzs)
-        self.K1_boltz.append(k1_boltzs)
+        self.K0_kubo.append(helpers.to_scalar_if_single(k0_kubos))
+        self.K1_kubo.append(helpers.to_scalar_if_single(k1_kubos))
+        self.K0_boltz.append(helpers.to_scalar_if_single(k0_boltzs))
+        self.K1_boltz.append(helpers.to_scalar_if_single(k1_boltzs))
     
     def run_Tdependence(self) -> None:
         dmu = self.config.get("dmu")
