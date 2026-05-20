@@ -173,3 +173,9 @@ def DoS(K, energije, epsilons, mu, velocity, faktor=0.2, shape='Gaussian'):
         for alpha in range(2):
             dos[alpha] += delta_approximation(epsilons - energije[alpha,k] + mu, sigma) 
     return dos / Nk
+
+def to_scalar_if_single(x):
+    x = np.asarray(x)
+    if x.size == 1:
+        return float(x.item())
+    return x
