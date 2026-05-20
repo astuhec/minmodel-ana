@@ -17,6 +17,15 @@ def meja_prevodni(m_a, m_b):
     x = m_a/m_b
     return (1-x)/np.sqrt(x)
 
+def z(m_a, m_b, gap, Delta):
+    y = gap/np.abs(Delta)
+    N_a, N_b = 1, 1
+    if y < meja_prevodni(m_a, m_b):
+        N_b = 2
+    if y < meja_valencni(m_a, m_b):
+        N_a = 2
+    return N_b / N_a
+    
 a, b, e, d, k = var('a b e d k')
 # bare lower band, and its first and second derivative
 expr_a = parse_mathematica('-e/2 - k^2/(2 a)')
@@ -179,3 +188,52 @@ def to_scalar_if_single(x):
     if x.size == 1:
         return float(x.item())
     return x
+
+def is_stable(Ts, mus, threshold=0.02, window=5):
+    stable_from_idx = 0
+    for i in range(len(Ts) - window):
+        local_mus = mus[i:i+window]
+        variation = np.max(local_mus) - np.min(local_mus)
+        if variation < threshold:
+            stable_from_idx = i
+            break
+    stable_from_idx = stable_from_idx + window
+    return stable_from_idx
+
+def find_linear_region(Ts, mus, stable_idx, window=10, r2_threshold=0.99):
+    """
+    Slide a window over T > T_stable, fit linear, check R^2.
+    Linear region = consecutive windows with high R^2.
+    Stop when R^2 drops below threshold.
+    """
+    from scipy.stats import linregress
+        
+    # Only look above stable index
+    T_sub  = Ts[stable_idx:]
+    mu_sub = mus[stable_idx:]
+    
+    r2_values = []
+    T_centers = []
+    
+    for i in range(len(T_sub) - window):
+        T_win  = T_sub[i:i+window]
+        mu_win = mu_sub[i:i+window]
+        
+        slope, intercept, r, p, se = linregress(T_win, mu_win)
+        r2 = r**2
+        r2_values.append(r2)
+        T_centers.append(T_sub[i])
+    
+    r2_values = np.array(r2_values)
+    T_centers = np.array(T_centers)
+    
+    # Find last index where R^2 is still above threshold
+    linear_mask = r2_values >= r2_threshold
+    if not np.any(linear_mask):
+        return None, None
+    
+    last_linear_idx = np.where(linear_mask)[0][-1]
+    T_linear_end    = T_centers[last_linear_idx] + (T_sub[1]-T_sub[0])*window
+    T_linear_start  = T_sub[0] # starts at T_stable
+
+    return T_linear_start, T_linear_end

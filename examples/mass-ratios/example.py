@@ -7,7 +7,7 @@ plt.rcParams['axes.labelsize'] = 15
 plt.rcParams['legend.fontsize'] = 13
 
 ####################################################################################################################
-## In this example, we calculate mass ratios in the effective band structure
+## In this example, we calculate mass ratios in the effective band structure.
 ####################################################################################################################
 
 print("Which computer are you on? (ana for Apple, anast for Lenovo)")
@@ -42,7 +42,7 @@ K = s.K
 # Calculate effective masses for different m_b and bare gaps, at fixed order parameter Delta=1.0
 Delta = 1.0
 m_a = 0.5
-m_bs = np.linspace(0.5,0.25,200)
+m_bs = np.linspace(0.1,0.5,200)
 gaps = [-0.5, -0.25, 0.0, 0.25, 0.5]
 
 m_plus = np.zeros((len(gaps), len(m_bs)))

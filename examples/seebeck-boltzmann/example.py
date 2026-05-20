@@ -44,19 +44,26 @@ t1 = 3.0
 m_a = 1/(2*t0)
 m_b = 1/(2*t1)
 
-gaps = [-0.5, -0.25, 0.0, 0.25, 0.5]
+gaps = [-0.5]
 
+fig, ax = plt.subplots(ncols=2, figsize=(10,4))
 for i, gap in enumerate(gaps):
     s = module.model(input_file, m_a=m_a, m_b=m_b, gap=gap)
 
     s.run_Tdependence()
+    s.run_lowT_dependence()
 
     Seebeck = s.collect_transport()['Seebeck_boltz']
-    Ts = s.Ts
+    phys_data = s.collect_physical_data()
+    Ts = phys_data['Ts']
+    mus = phys_data['mus']
 
-    plt.plot(Ts, Seebeck, label=rf'${gap}$')
+    ax[0].plot(Ts, mus, '.-', label=rf'${gap}$', )
+    ax[1].plot(Ts, Seebeck, '.-', )
+
+ax[0].axhline(0.5*(np.min(s.energije[1]) + np.max(s.energije[0])))
 plt.legend(frameon=False).set_title(r'$E_g$', prop={'size' : 15})
 plt.xlabel('$T/t_0$')
-plt.ylabel(r'$S\,[k_b/e_0]$')
+plt.ylabel(r'$S\,[k_B/e_0]$')
 plt.tight_layout()
 plt.show()

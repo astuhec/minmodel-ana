@@ -18,6 +18,7 @@ class model:
         self.option = config.get("option")
         self.Nk = config.get("Nk")
         dk = config.get("dk")
+        self.dk = dk
         self.L = int(2*np.pi / dk)
         self.K = np.arange(-self.Nk//2,self.Nk//2) * 2*np.pi/self.L
 
@@ -39,6 +40,7 @@ class model:
         self.energije = helpers.Energies(self.m_a, self.m_b, self.gap, self.Delta, self.K, self.tol)
         self.energije_bare = helpers.Energies_bare(self.m_a, self.m_b, self.gap, self.K)
         self.mu = 0.5 * (np.min(self.energije[1]) + np.max(self.energije[0]))
+        self.mu_GS = self.mu
 
         # physical data
         self.Ts = []
@@ -63,13 +65,20 @@ class model:
         self.mu_errs = []
         self.Delta_errs = []
 
-    def find_muDelta(self, T, mu_low, mu_up, Delta0=1.) -> None:
+    def find_muDelta(self, T, mu_low, mu_up, Delta0=1., k=None, n=None) -> None:
+        gap_dressed = helpers.Gap(self.energije)
         if self.option == 'fixed':
-            mu_bisect = brentq(helpers.bisect_condition_mu_fixedDelta, mu_low, mu_up, args=(T, self.K, self.m_a, self.m_b, self.gap, self.Delta), xtol=1e-10, rtol=1e-10)
+            if (k,n) == (None,None):
+                mu_bisect = brentq(helpers.bisect_condition_mu_fixedDelta, mu_low, mu_up, args=(T, self.K, self.m_a, self.m_b, self.gap, self.Delta), xtol=1e-10, rtol=1e-10)
+            else:
+                 mu_bisect = k*T + n
             Delta = self.Delta
             err = 0.
         elif self.option == 'consistent':
-            mu_bisect = brentq(helpers.bisect_condition_mu_consistentDelta, mu_low, mu_up, args=(T, self.K, self.m_a, self.m_b, self.gap, self.Delta, self.V0, self.maxiter), xtol=1e-10, rtol=1e-10)
+            if (k,n) == (None,None):
+                mu_bisect = brentq(helpers.bisect_condition_mu_consistentDelta, mu_low, mu_up, args=(T, self.K, self.m_a, self.m_b, self.gap, self.Delta, self.V0, self.maxiter), xtol=1e-10, rtol=1e-10)
+            else:
+                mu_bisect = k*T + n
             Delta, err = helpers.F_full(self.m_a, self.m_b, self.gap, Delta0, self.K, self.V0, mu_bisect, T, self.tol, self.maxiter, np.max(np.hstack([self.tol, self.Delta_errs])))
         self.mu = mu_bisect
         self.Delta = Delta
@@ -117,16 +126,17 @@ class model:
         self.K0_boltz.append(helpers.to_scalar_if_single(k0_boltzs))
         self.K1_boltz.append(helpers.to_scalar_if_single(k1_boltzs))
     
-    def run_Tdependence(self) -> None:
+    def run_Tdependence(self, k=None, n=None, T_low=None, T_high=None, T_len=None) -> None:
         dmu = self.config.get("dmu")
         eps = self.config.get("eps")
         Nomega = self.config.get("Nomega")
         Gammas = self.config.get("Gammas")
         
-        T_low = self.config.get("T_low")
-        T_high = self.config.get("T_high")
-        T_len = self.config.get("T_len")
+        T_low = self.config.get("T_low") if T_low==None else T_low
+        T_high = self.config.get("T_high") if T_high==None else T_high
+        T_len = self.config.get("T_len") if T_len==None else T_len
         Ts = np.linspace(T_low, T_high, T_len)
+
         print('-' * 80, flush=True)
         print('Started to find temperature dependence of transport coefficients.', flush=True)
         for i, T in enumerate(Ts):
@@ -136,7 +146,7 @@ class model:
 
             mu_low = self.mu - dmu
             mu_upp = self.mu + dmu
-            self.find_muDelta(T, mu_low, mu_upp)
+            self.find_muDelta(T, mu_low, mu_upp, k=k, n=n)
             self.Deltas.append(self.Delta)
             self.mus.append(self.mu)
 
@@ -152,17 +162,51 @@ class model:
             self.edges_vale.append(edge_vale)
             self.edges_cond.append(edge_cond)
 
-        print('-' * 80, flush=True)
+        print('\n' + '-' * 80, flush=True)
         print('Finished temperature dependence of transport coefficients.', flush=True)
 
-    def collect_transport(self):
-        K0_kubo = np.swapaxes(self.K0_kubo, 0, 1)
-        K1_kubo = np.swapaxes(self.K1_kubo, 0, 1)
-        K0_boltz = np.swapaxes(self.K0_boltz, 0, 1)
-        K1_boltz = np.swapaxes(self.K1_boltz, 0, 1)
+    def run_lowT_dependence(self,
+                            threshold=0.02, window=5, safety=10, window0=20, r2_threshold=0.99, T_low=0.001, T_len=50):
+            # find interval where mu(T) makes sense (linear)
+
+            stable_index = helpers.is_stable(self.Ts, self.mus, threshold, window) + safety
+
+            # find interval above T_stable where mu(T) is linear. this will serve as approximation for mu(T) at T < T_stable
+            T_start, T_end = None, None
+            while T_start==None or T_end==None:
+                T_start, T_end = helpers.find_linear_region(self.Ts, self.mus, stable_index, window0, r2_threshold=r2_threshold)
+                window0 -= 5
+            ind_start = np.argmin(np.abs(self.Ts - T_start))
+            ind_end = np.argmin(np.abs(self.Ts - T_end))
+            k, n = np.polyfit(self.Ts[ind_start:ind_end], self.mus[ind_start:ind_end], 1)
+
+            self.coefficients = (k,n)
+            n = self.mu_GS
+            k = (self.mus[stable_index] - self.mu_GS) / self.Ts[stable_index]
+
+            count = len(self.Ts)
+            T_high = self.Ts[stable_index]
+
+            self.run_Tdependence(k=k, n=n, T_low=T_high, T_high=T_low, T_len=T_len)
+
+            self.stable_index = stable_index
+            self.Ncorrection = len(self.Ts) - count
+
+    def merge(self, arr):
+        arr1 = arr[self.stable_index:-self.Ncorrection]
+        arr2 = arr[-self.Ncorrection+1:][::-1]
+        arr = np.concatenate([arr2, arr1], axis=0)
+        return arr
         
-        Seebeck_kubo = - K1_kubo / K0_kubo / np.array(self.Ts)
-        Seebeck_boltz = -K1_boltz / K0_boltz / np.array(self.Ts)
+    def collect_transport(self):
+        Ts = self.merge(self.Ts)
+        K0_kubo = self.merge(self.K0_kubo)
+        K1_kubo = self.merge(self.K1_kubo)
+        K0_boltz = self.merge(self.K0_boltz)
+        K1_boltz = self.merge(self.K1_boltz)
+        
+        Seebeck_kubo = - K1_kubo / K0_kubo / Ts
+        Seebeck_boltz = - K1_boltz / K0_boltz / Ts
 
         transport_data = {'cond_kubo' : K0_kubo,
                           'cond_boltz' : K0_boltz,
@@ -171,25 +215,25 @@ class model:
         return transport_data
 
     def collect_physical_data(self):
-        physical_data = {'Ts' : np.array(self.Ts),
-                         'mus' : np.array(self.mus),
-                         'Deltas' : np.array(self.Deltas),
-                         'gaps' : np.array(self.gaps)}
+        physical_data = {'Ts' : self.merge(self.Ts),
+                         'mus' : self.merge(self.mus),
+                         'Deltas' : self.merge(self.Deltas),
+                         'gaps' : self.merge(self.gaps)}
         return physical_data
         
     def collect_valence_data(self):
-        vale_data = {'masses' : np.array(self.masses_vale),
-                     'edges' : np.array(self.edges_vale),
-                     'ks' : np.array(self.ks_vale)}
+        vale_data = {'masses' : self.merge(self.masses_vale),
+                     'edges' : self.merge(self.edges_vale),
+                     'ks' : self.merge(self.ks_vale)}
         return vale_data
         
     def collect_conduction_data(self):
-        cond_data = {'masses' : np.array(self.masses_cond),
-                     'edges' : np.array(self.edges_cond),
-                     'ks' : np.array(self.ks_cond)}
+        cond_data = {'masses' : self.merge(self.masses_cond),
+                     'edges' : self.merge(self.edges_cond),
+                     'ks' : self.merge(self.ks_cond)}
         return cond_data
 
     def collect_numerical_data(self):
-        num_data = {'Delta_errs' : np.array(self.Delta_errs),
-                    'mu_errs' : np.array(self.mu_errs)}
+        num_data = {'Delta_errs' : self.merge(self.Delta_errs),
+                    'mu_errs' : self.merge(self.mu_errs)}
         return num_data
