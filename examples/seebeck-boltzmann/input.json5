@@ -11,9 +11,9 @@
     "V0" : 1.0,         // interaction. only matters if option=consistent
 
     /* input for T dependence and transport calculations */ 
-    "T_low" : 0.005,     /// from this a linspace is constructed
-    "T_high" : 0.2,
-    "T_len" : 50,
+    "T_low" : 0.001,     /// from this a linspace is constructed
+    "T_high" : 0.5,
+    "T_len" : 100,
     "dmu" : 0.5,
     "tol" : 1e-8,
 
