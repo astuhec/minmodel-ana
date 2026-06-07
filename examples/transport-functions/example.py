@@ -20,7 +20,7 @@ while True:
     print("Invalid input. Please type 'ana' or 'anast'.")
 
 if computer == 'anast':
-    DIR = '/Users/anast/OneDrive/Namizje/minmodel-ana/'
+    DIR = '/Users/anast/minmodel-ana/'
 else:  # ana
     DIR = '/Users/ana/Desktop/minmodel-ana/'
 
@@ -37,10 +37,7 @@ input_file = DIR + 'examples/transport-functions/input.json5'
 ## (1) Initialize model
 s = module.model(input_file)
 
-## (2) Reach a (low) finite temperature
-s.run_Tdependence()
-
-## (3) Transport functions
+## (2) Transport functions
 fig, ax = plt.subplots(ncols=3, figsize=(14,4))
 epsilons = np.linspace(-3.0,3.0,1501)
 Gamma = 0.005
