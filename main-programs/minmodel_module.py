@@ -131,6 +131,7 @@ class model:
         eps = self.config.get("eps")
         Nomega = self.config.get("Nomega")
         Gammas = self.config.get("Gammas")
+        self.Gammas = Gammas
         
         T_low = self.config.get("T_low") if T_low==None else T_low
         T_high = self.config.get("T_high") if T_high==None else T_high
@@ -205,13 +206,12 @@ class model:
         K0_boltz = self.merge(self.K0_boltz)
         K1_boltz = self.merge(self.K1_boltz)
         
-        Seebeck_kubo = - K1_kubo / K0_kubo / Ts
-        Seebeck_boltz = - K1_boltz / K0_boltz / Ts
 
-        transport_data = {'cond_kubo' : K0_kubo,
-                          'cond_boltz' : K0_boltz,
-                          'Seebeck_kubo' : Seebeck_kubo,
-                          'Seebeck_boltz' : Seebeck_boltz}
+        transport_data = {'K0_kubo' : K0_kubo,
+                          'K0_boltz' : K0_boltz,
+                          'K1_kubo' : K1_kubo,
+                          'K1_boltz' : K1_boltz,
+                          'Ts' : Ts}
         return transport_data
 
     def collect_physical_data(self):

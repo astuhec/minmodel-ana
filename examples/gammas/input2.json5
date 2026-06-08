@@ -1,0 +1,24 @@
+{
+
+    /* physical parameters */ 
+    "Nk" : 10001,        // number of momentum points
+    "dk" : 0.001,       // spacing between momentum points
+    "t1" : 1.0,         // hopping amplitude in lower band, determining m_a=1/(2t1)
+    "t2" : 3.0,         // hopping amplitude in upper band, determining m_b=1/(2t2)
+    "gap" : -0.5,       // bare bandgap (overlap)
+    "option" : "fixed",  // "fixed" OR "consistent"
+    "Delta" : 1.0,      /// order parameter. only matters if option=fixed
+    "V0" : 1.0,         // interaction. only matters if option=consistent
+
+    /* input for T dependence and transport calculations */ 
+    "T_low" : 0.001,     /// from this a linspace is constructed
+    "T_high" : 0.3,
+    "T_len" : 100,
+    "dmu" : 0.5,
+    "tol" : 1e-8,
+
+    "Gammas" : [0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01, 0.011, 0.012, 0.013, 0.014, 0.015],      // spectral function width
+    "eps" : 1e-6,
+    "Nomega" : 3001
+    
+    }
