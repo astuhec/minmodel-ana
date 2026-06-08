@@ -35,7 +35,7 @@ input_file = DIR + 'examples/transport-functions/input.json5'
 ####################################################################################################################
 
 ## (1) Initialize model
-s = module.model(input_file)
+s = module.model(input_file, gap=-1.0)
 
 ## (2) Transport functions
 fig, ax = plt.subplots(ncols=3, figsize=(14,4))

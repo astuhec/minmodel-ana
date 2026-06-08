@@ -20,7 +20,7 @@ while True:
     print("Invalid input. Please type 'ana' or 'anast'.")
 
 if computer == 'anast':
-    DIR = '/Users/anast/OneDrive/Namizje/minmodel-ana/'
+    DIR = '/Users/anast/minmodel-ana/'
 else:  # ana
     DIR = '/Users/ana/Desktop/minmodel-ana/'
 

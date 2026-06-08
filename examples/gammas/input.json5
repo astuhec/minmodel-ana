@@ -17,7 +17,7 @@
     "dmu" : 0.5,
     "tol" : 1e-8,
 
-    "Gammas" : [0.008],      // spectral function width
+    "Gammas" : [0.003, 0.005, 0.008],      // spectral function width
     "eps" : 1e-6,
     "Nomega" : 3001
     
